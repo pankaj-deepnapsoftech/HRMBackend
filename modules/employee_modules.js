@@ -135,16 +135,12 @@ const employeeSchema = new mongoose.Schema(
     loginDate: { type: String }, // Store the last login date
     loginTime: { type: String },
     logoutTime: { type: String },
-    totalActiveTime: { type: Number, default: 0 }, // Total active time in minutes
-    totalInactiveTime: { type: Number, default: 0 },
-    formattedTotalInactiveTime: { type: String }, // Store formatted total inactive time
-    formattedTotalActiveTime: { type: String }, // Store formatted total active time
-    formattedInactiveTime: { type: String }, // Store formatted inactive time
-    formattedActiveTime: { type: String }, // Store formatted time as a string
     backgroundVerification: backgroundVerificationSchema,
     bankVerification: bankVerificationSchema,
     requestLeave: [requestLeaveSchema],
     location: { type: String },
+    fullDayLeavesThisMonth: { type: Number, default: 0 }, // Track full-day leaves for the current month
+    halfDayLeavesThisMonth: { type: Number, default: 0 }, // Track half-day leaves for the current month
     attendance: [attendanceSchema], // Add the attendance array to track the attendance history
     // other fields
     assets: [
