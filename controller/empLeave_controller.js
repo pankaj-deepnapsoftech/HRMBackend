@@ -42,48 +42,38 @@ const addRequestLeave = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // Get updated leave limits from DB
-    const maxHalfDayLeaves = employee.halfDayLeavesThisMonth || 5; // Corrected
-    const maxFullDayLeaves = employee.fullDayLeavesThisMonth || 3; // Corrected
+    // Count total pending and approved leaves
+    const pendingHalfLeaves = employee.requestLeave.filter(leave => leave.halfLeave && leave.status !== "Rejected").length;
+    const pendingFullLeaves = employee.requestLeave.filter(leave => leave.fullLeave && leave.status !== "Rejected").length;
 
-    // Validate leave request
+    // Validate leave request (Pending + Approved should not exceed limit)
     if (halfLeave) {
-      if (employee.halfDayLeavesThisMonth <= 0) {
-        return res.status(400).json({
-          message: `You have exhausted your half-day leaves for this month.`,
-        });
+      if (pendingHalfLeaves >= employee.halfDayLeavesThisMonth) {
+        return res.status(400).json({ message: `You have exhausted your half-day leaves for this month.` });
       }
-      employee.halfDayLeavesThisMonth -= 1; // Deduct leave
     } else if (fullLeave) {
-      if (employee.fullDayLeavesThisMonth <= 0) {
-        return res.status(400).json({
-          message: `You have exhausted your full-day leaves for this month.`,
-        });
+      if (pendingFullLeaves >= employee.fullDayLeavesThisMonth) {
+        return res.status(400).json({ message: `You have exhausted your full-day leaves for this month.` });
       }
-      employee.fullDayLeavesThisMonth -= 1; // Deduct leave
     } else {
       return res.status(400).json({ message: "Invalid leave type." });
     }
 
-    // Append leave request
+    // Append leave request with status "pending"
     employee.requestLeave.push({
       fromDate,
       toDate,
       halfLeave,
       fullLeave,
       reason,
+      status: "Pending", // Leave request starts as pending
     });
 
-    // Save updated data
     await employee.save();
 
     res.status(200).json({
       success: true,
-      message: "Leave request added successfully",
-      updatedLeaves: {
-        fullDayLeaves: employee.fullDayLeavesThisMonth,
-        halfDayLeaves: employee.halfDayLeavesThisMonth,
-      },
+      message: "Leave request submitted successfully, awaiting approval.",
     });
   } catch (error) {
     console.error("Error while submitting leave request:", error);
@@ -91,50 +81,64 @@ const addRequestLeave = async (req, res) => {
   }
 };
 
+
 // reuest leave status for approval by admin
 const updateLeaveRequest = async (req, res) => {
   try {
     const { userId, leaveId, status } = req.body;
 
-    // Find the employee by ID
+    // Find employee
     const employee = await Employee.findById(userId);
     if (!employee) {
-      return res.status(404).json({
-        success: false,
-        message: "Employee not found",
-      });
+      return res.status(404).json({ success: false, message: "Employee not found" });
     }
 
-    // Find the leave request by ID
-    const leave = employee.requestLeave.find(
-      (leave) => leave._id.toString() === leaveId
-    );
+    // Find leave request
+    const leave = employee.requestLeave.find(leave => leave._id.toString() === leaveId);
     if (!leave) {
-      return res.status(404).json({
-        success: false,
-        message: "Leave request not found",
-      });
+      return res.status(404).json({ success: false, message: "Leave request not found" });
     }
 
-    // Update the leave status
-    leave.status = status;
+    // If already approved/rejected, return early
+    if (leave.status === status) {
+      return res.status(400).json({ success: false, message: `Leave is already ${status}` });
+    }
 
-    // Save the updated employee document
+    if (status === "Approved") {
+      // Deduct leave balance when approving
+      if (leave.halfLeave && employee.halfDayLeavesThisMonth > 0) {
+        employee.halfDayLeavesThisMonth -= 1;
+      }
+      if (leave.fullLeave && employee.fullDayLeavesThisMonth > 0) {
+        employee.fullDayLeavesThisMonth -= 1;
+      }
+    } else if (status === "Rejected" && leave.status === "Approved") {
+      // Restore balance if previously approved but now rejected
+      if (leave.halfLeave) {
+        employee.halfDayLeavesThisMonth += 1;
+      }
+      if (leave.fullLeave) {
+        employee.fullDayLeavesThisMonth += 1;
+      }
+    }
+
+    // Update leave status
+    leave.status = status;
     await employee.save();
 
     res.status(200).json({
       success: true,
       message: `Leave request ${status.toLowerCase()} successfully.`,
-      updatedEmployee: employee, // Return updated employee data
+      updatedLeaves: {
+        fullDayLeaves: employee.fullDayLeavesThisMonth,
+        halfDayLeaves: employee.halfDayLeavesThisMonth,
+      },
     });
   } catch (error) {
     console.error("Error updating leave request status:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export { addRequestLeave, updateLeaveRequest, getLeaveLimits };
