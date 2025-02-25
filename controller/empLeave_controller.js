@@ -19,7 +19,6 @@ const getLeaveLimits = async (req, res) => {
       halfDayLeaves: employee.halfDayLeavesThisMonth || 0,
     };
 
-
     // Respond with the current leave limits
     res.status(200).json({
       success: true,
@@ -33,53 +32,52 @@ const getLeaveLimits = async (req, res) => {
 
 // Controller to add a leave request for an employee
 const addRequestLeave = async (req, res) => {
-  const { fromDate, toDate, halfLeave, fullLeave } = req.body; // Request leave data
-  const { employeeId } = req.params; // Employee ID from URL
+  const { fromDate, toDate, halfLeave, fullLeave } = req.body;
+  const { employeeId } = req.params;
 
   try {
-    // Check if the employee exists
+    // Find employee
     const employee = await Employee.findById(employeeId);
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // Fetch admin-approved leave limits (fallback to default values if not set)
-    const maxHalfDayLeaves = employee.fullDayLeavesThisMonth || 5; // Default 5 half-day leaves
-    const maxFullDayLeaves = employee.halfDayLeavesThisMonth || 3; // Default 3 full-day leaves
+    // Get updated leave limits from DB
+    const maxHalfDayLeaves = employee.halfDayLeavesThisMonth || 5; // Corrected
+    const maxFullDayLeaves = employee.fullDayLeavesThisMonth || 3; // Corrected
 
-    // Validate the leave request
+    // Validate leave request
     if (halfLeave) {
-      if (employee.halfDayLeavesThisMonth >= maxHalfDayLeaves) {
+      if (employee.halfDayLeavesThisMonth <= 0) {
         return res.status(400).json({
-          message: `You have exhausted your ${maxHalfDayLeaves} half-day leaves for this month.`,
+          message: `You have exhausted your half-day leaves for this month.`,
         });
       }
-
-      // Update the leave balance
-      employee.halfDayLeavesThisMonth += 1; // Increment half-day leaves
+      employee.halfDayLeavesThisMonth -= 1; // Deduct leave
     } else if (fullLeave) {
-      if (employee.fullDayLeavesThisMonth >= maxFullDayLeaves) {
+      if (employee.fullDayLeavesThisMonth <= 0) {
         return res.status(400).json({
-          message: `You have exhausted your ${maxFullDayLeaves} full-day leaves for this month.`,
+          message: `You have exhausted your full-day leaves for this month.`,
         });
       }
-
-      // Update the leave balance
-      employee.fullDayLeavesThisMonth += 1; // Increment full-day leaves
+      employee.fullDayLeavesThisMonth -= 1; // Deduct leave
     } else {
       return res.status(400).json({ message: "Invalid leave type." });
     }
 
-    // Append the new leave request to employee's leave history
+    // Append leave request
     employee.requestLeave.push({ fromDate, toDate, halfLeave, fullLeave });
 
-    // Save the updated employee data with the new leave request
-    const updatedEmployee = await employee.save();
+    // Save updated data
+    await employee.save();
 
     res.status(200).json({
       success: true,
       message: "Leave request added successfully",
-      data: updatedEmployee,
+      updatedLeaves: {
+        fullDayLeaves: employee.fullDayLeavesThisMonth,
+        halfDayLeaves: employee.halfDayLeavesThisMonth,
+      },
     });
   } catch (error) {
     console.error("Error while submitting leave request:", error);

@@ -2,7 +2,7 @@ import { Employee } from "../modules/employee_modules.js";
 
 const addReimbursement = async (req, res) => {
   try {
-    const { employeeId, amount,  paymentDate, notes } = req.body;
+    const { employeeId, amount, paymentDate, notes } = req.body;
 
     // Check if the employee exists
     const employee = await Employee.findById(employeeId);
@@ -10,7 +10,7 @@ const addReimbursement = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-  // Create a new incentive
+    // Create a new incentive
     const newReimbursement = {
       amount,
       paymentDate,
@@ -29,7 +29,6 @@ const addReimbursement = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 
 export { addReimbursement };

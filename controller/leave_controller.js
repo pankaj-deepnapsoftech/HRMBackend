@@ -1,9 +1,9 @@
-import { Employee } from "../modules/employee_modules.js";  // Import the Employee model
-import ApiError from "../utlis/ApiError.js";  // Import custom error handler
+import { Employee } from "../modules/employee_modules.js"; // Import Employee model
+import ApiError from "../utlis/ApiError.js"; // Import custom error handler
 
 // Endpoint to get leave status for an employee
 const getLeaveStatus = async (req, res) => {
-  const { employeeId } = req.params;  // Employee ID from URL
+  const { employeeId } = req.params; // Employee ID from URL
 
   try {
     // Find the employee by ID
@@ -12,23 +12,28 @@ const getLeaveStatus = async (req, res) => {
       throw new ApiError(404, "Employee not found");
     }
 
-    // Calculate how many half-day and full-day leaves the employee has used this month
+    // Get the current month and the last updated month
     const currentMonth = new Date().getMonth();
-    const lastUpdatedMonth = employee.updatedAt.getMonth();
+    const lastUpdatedMonth = employee.updatedAt?.getMonth();
 
-    // If the employee's leave record was last updated in a different month, reset the counts
+    // If the leave record was last updated in a different month, reset the counts
     if (lastUpdatedMonth !== currentMonth) {
       employee.fullDayLeavesThisMonth = 0;
       employee.halfDayLeavesThisMonth = 0;
+      await employee.save(); // Save the reset values in the database
     }
 
-    // Return the leave status
+    // Return the updated leave status
     res.status(200).json({
-      halfDayLeaves: employee.halfDayLeavesThisMonth,
-      fullDayLeaves: employee.fullDayLeavesThisMonth,
+      success: true,
+      message: "Leave status fetched successfully",
+      leaveStatus: {
+        fullDayLeaves: employee.fullDayLeavesThisMonth,
+        halfDayLeaves: employee.halfDayLeavesThisMonth,
+      },
     });
   } catch (error) {
-    console.error("Error fetching leave status", error);
+    console.error("Error fetching leave status:", error);
     res.status(error.statusCode || 500).json({
       message: error.message || "Internal Server Error",
     });
