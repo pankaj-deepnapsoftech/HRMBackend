@@ -47,6 +47,9 @@ const requestLeaveSchema = new mongoose.Schema({
     enum: ["Pending", "Approved", "Rejected"],
     default: "Pending", // Default status when leave is requested
   },
+  reason:{
+    type:String
+  }
 });
 
 // Attendance Schema

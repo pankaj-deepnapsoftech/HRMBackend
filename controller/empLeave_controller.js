@@ -32,7 +32,7 @@ const getLeaveLimits = async (req, res) => {
 
 // Controller to add a leave request for an employee
 const addRequestLeave = async (req, res) => {
-  const { fromDate, toDate, halfLeave, fullLeave } = req.body;
+  const { fromDate, toDate, halfLeave, fullLeave ,reason} = req.body;
   const { employeeId } = req.params;
 
   try {
@@ -66,7 +66,7 @@ const addRequestLeave = async (req, res) => {
     }
 
     // Append leave request
-    employee.requestLeave.push({ fromDate, toDate, halfLeave, fullLeave });
+    employee.requestLeave.push({ fromDate, toDate, halfLeave, fullLeave ,reason});
 
     // Save updated data
     await employee.save();
