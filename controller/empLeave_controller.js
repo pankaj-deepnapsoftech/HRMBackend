@@ -87,13 +87,13 @@ const updateLeaveRequest = async (req, res) => {
   try {
     const { userId, leaveId, status } = req.body;
 
-    // Find employee
+  // Find employee
     const employee = await Employee.findById(userId);
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     }
 
-    // Find leave request
+ // Find leave request
     const leave = employee.requestLeave.find(leave => leave._id.toString() === leaveId);
     if (!leave) {
       return res.status(404).json({ success: false, message: "Leave request not found" });

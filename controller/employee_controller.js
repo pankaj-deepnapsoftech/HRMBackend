@@ -5,7 +5,6 @@ import moment from "moment";
 import axios from "axios";
 import bcrypt from "bcrypt";
 
-
 // Generate access token function
 const generateAccessToken = async (userId) => {
   const user = await Employee.findById(userId);
@@ -43,14 +42,12 @@ const employeeRegister = async (req, res) => {
     shift,
     salary,
     dob,
-    avatar
-    
+    avatar,
   } = req.body;
 
-  console.log("Request Body:", req.body);
   // check if user already register in database
   const existingUser = await Employee.findOne({
-    $or: [{ email, password, }],
+    $or: [{ email, password }],
   });
 
   if (existingUser) {
@@ -83,10 +80,9 @@ const employeeRegister = async (req, res) => {
     shift,
     salary,
     dob,
-    avatar:avatarUrl
+    avatar: avatarUrl,
   });
 
-  console.log("Employee:", employee);
   // if employee does not register then throw a error
   if (!employee) {
     throw new ApiError(400, "Employee does not register");
@@ -112,8 +108,6 @@ const employeeRegister = async (req, res) => {
 const employeeLogin = async (req, res) => {
   try {
     const { email, password, location } = req.body;
-
-    console.log("employee login:", req.body);
 
     // Find the employee by email
     const existingUser = await Employee.findOne({ email });
@@ -153,24 +147,42 @@ const employeeLogin = async (req, res) => {
     const today = moment().format("YYYY-MM-DD");
     const currentLoginTime = moment().format("HH:mm:ss");
 
-    // Find or create today's attendance record
+    // Get the last recorded attendance date
+    let lastAttendanceDate = existingUser.attendance.length
+      ? moment(existingUser.attendance[existingUser.attendance.length - 1].date)
+      : null;
+
+    // If there's a gap between the last recorded date and today, fill missing days with "Absent"
+    if (lastAttendanceDate) {
+      let dateIterator = moment(lastAttendanceDate).add(1, "days");
+      while (dateIterator.isBefore(moment(today))) {
+        existingUser.attendance.push({
+          date: dateIterator.format("YYYY-MM-DD"),
+          status: "Absent",
+          loginTime: null,
+        });
+        dateIterator.add(1, "days"); // Move to the next missing day
+      }
+    }
+
+    // Find today's attendance record
     let attendanceRecord = existingUser.attendance.find(
       (att) => att.date === today
     );
 
+    // If no record exists for today, mark as "Present"
     if (!attendanceRecord) {
-      // If no attendance record exists for today, create one
       existingUser.attendance.push({
         date: today,
         status: "Present",
         loginTime: currentLoginTime,
       });
     } else if (!attendanceRecord.loginTime) {
-      // If attendance record exists but loginTime is not set, update it
+      // If today's record exists but loginTime is missing, update it
       attendanceRecord.loginTime = currentLoginTime;
     }
 
-    // Update the `lastLoginTime` field
+    // Update last login time
     existingUser.lastLoginTime = currentLoginTime;
 
     // Use Mapbox API to reverse geocode the location
@@ -194,8 +206,6 @@ const employeeLogin = async (req, res) => {
         address = "Unable to fetch address";
       }
     }
-
-    console.log(address);
 
     // Update the user's location in the database if an address is available
     if (address) {

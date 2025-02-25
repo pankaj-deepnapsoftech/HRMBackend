@@ -47,9 +47,9 @@ const requestLeaveSchema = new mongoose.Schema({
     enum: ["Pending", "Approved", "Rejected"],
     default: "Pending", // Default status when leave is requested
   },
-  reason:{
-    type:String
-  }
+  reason: {
+    type: String,
+  },
 });
 
 // Attendance Schema
@@ -141,21 +141,10 @@ const employeeSchema = new mongoose.Schema(
     formattedTotalActiveTime: { type: String }, // Store formatted total active time
     formattedInactiveTime: { type: String }, // Store formatted inactive time
     formattedActiveTime: { type: String }, // Store formatted time as a string
-    dailyActivity: [
-      {
-        date: { type: Date, default: Date.now },
-        activeTime: { type: Number, default: 0 },
-        inactiveTime: { type: Number, default: 0 },
-        formattedInactiveTime: { type: String }, // Store formatted inactive time
-        formattedActiveTime: { type: String }, // Store formatted time as a string
-      },
-    ],
     backgroundVerification: backgroundVerificationSchema,
     bankVerification: bankVerificationSchema,
     requestLeave: [requestLeaveSchema],
     location: { type: String },
-    fullDayLeavesThisMonth: { type: Number, default: 0 }, // Track full-day leaves for the current month
-    halfDayLeavesThisMonth: { type: Number, default: 0 }, // Track half-day leaves for the current month
     attendance: [attendanceSchema], // Add the attendance array to track the attendance history
     // other fields
     assets: [
