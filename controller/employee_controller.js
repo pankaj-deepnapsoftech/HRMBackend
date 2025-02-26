@@ -17,8 +17,6 @@ const generateAccessToken = async (userId) => {
 };
 
 const employeeRegister = async (req, res) => {
-
-
   if (!req.file) {
     return res.status(400).json({ message: "Avatar file is required!" });
   }
@@ -142,47 +140,27 @@ const employeeLogin = async (req, res) => {
       });
     }
 
-    // Get today's date and login time
+    // Get today's date and current login time
     const today = moment().format("YYYY-MM-DD");
     const currentLoginTime = moment().format("HH:mm:ss");
-
-    // Get the last recorded attendance date
-    let lastAttendanceDate = existingUser.attendance.length
-      ? moment(existingUser.attendance[existingUser.attendance.length - 1].date)
-      : null;
-
-    // If there's a gap between the last recorded date and today, fill missing days with "Absent"
-    if (lastAttendanceDate) {
-      let dateIterator = moment(lastAttendanceDate).add(1, "days");
-      while (dateIterator.isBefore(moment(today))) {
-        existingUser.attendance.push({
-          date: dateIterator.format("YYYY-MM-DD"),
-          status: "Absent",
-          loginTime: null,
-        });
-        dateIterator.add(1, "days"); // Move to the next missing day
-      }
-    }
 
     // Find today's attendance record
     let attendanceRecord = existingUser.attendance.find(
       (att) => att.date === today
     );
 
-    // If no record exists for today, mark as "Present"
     if (!attendanceRecord) {
+      // If no attendance record exists, create one as "Present"
       existingUser.attendance.push({
         date: today,
         status: "Present",
         loginTime: currentLoginTime,
       });
-    } else if (!attendanceRecord.loginTime) {
-      // If today's record exists but loginTime is missing, update it
+    } else if (attendanceRecord.status === "Absent") {
+      // If the employee was marked absent, update to "Present"
+      attendanceRecord.status = "Present";
       attendanceRecord.loginTime = currentLoginTime;
     }
-
-    // Update last login time
-    existingUser.lastLoginTime = currentLoginTime;
 
     // Use Mapbox API to reverse geocode the location
     let address = "";
