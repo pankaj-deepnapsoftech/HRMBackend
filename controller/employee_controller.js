@@ -17,8 +17,7 @@ const generateAccessToken = async (userId) => {
 };
 
 const employeeRegister = async (req, res) => {
-  console.log("File Uploaded:", req.file); // 🟢 Log uploaded file
-  console.log("Request Body:", req.body); // Log request data
+
 
   if (!req.file) {
     return res.status(400).json({ message: "Avatar file is required!" });

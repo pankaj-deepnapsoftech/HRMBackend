@@ -12,7 +12,7 @@ const generateAccessToken = async (userId) => {
     }
 
     const accessToken = user.generateAccessToken();
-    console.log(accessToken);
+
 
     // Ensure that the token is generated before saving
     await user.save({ validateBeforeSave: false });
@@ -30,7 +30,7 @@ const generateAccessToken = async (userId) => {
 // User Register Controller
 const userRegister = async (req, res) => {
   try {
-    console.log("Request Body:", req.body);
+    
     const { username, email, password, firstName, lastName, contactId } =
       req.body;
 
@@ -54,7 +54,7 @@ const userRegister = async (req, res) => {
       firstName,
       lastName,
     });
-    console.log("User:", user);
+    
     if (!user) {
       throw new ApiError(500, "User could not be created. Please try again.");
     }
@@ -80,7 +80,7 @@ const userRegister = async (req, res) => {
 // User Login Controller
 const userLogin = async (req, res) => {
   try {
-    console.log("Login Request Body:", req.body);
+    
 
     const { username, email, password } = req.body;
 
@@ -140,7 +140,7 @@ const userLogout = async (req, res) => {
   try {
     // Check if the accessToken cookie is already missing (optional, depending on your logic)
     const token = req.cookies.accessToken;
-    console.log("backend token:", token);
+   
 
     if (!token) {
       return res
