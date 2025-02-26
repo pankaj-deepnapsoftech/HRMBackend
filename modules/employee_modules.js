@@ -94,7 +94,7 @@ const employeeSchema = new mongoose.Schema(
       required: [true, "Password is required"],
     },
     confirmPassword: {
-      type: Number,
+      type: String,
       required: [true, "Password is required"],
     },
     phoneNumber: {
