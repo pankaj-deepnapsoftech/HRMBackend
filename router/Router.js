@@ -15,6 +15,7 @@ import {
   projectDetails,
   getAllProject,
   deleteProject,
+  updateProject,
 } from "../controller/projectController.js";
 import { addBackgroundVerification } from "../controller/bgVerificationController.js";
 import { addBankVerification } from "../controller/bankVerification_controller.js";
@@ -63,7 +64,9 @@ userRouter.route("/employee/attendance/present/count").get(getTotalPresentEmploy
 userRouter.route("/employee/attendance/absent/count").get(getTotalAbsentEmployees);
 userRouter.route("/employee/:employeeId/delete").delete(deleteEmployee);
 userRouter.route("/employee/daily/attendance").get(getTodayAttendance);
-userRouter.route("/projectDetails/:id").delete(deleteEmployee)
+userRouter.route("/projectDetails/:id").delete(deleteProject);
+userRouter.route("/projectDetails/update/:id").put(updateProject);
+
 
 // routes for reset password
 userRouter.route("/reset-password/request").post(requestPasswordReset);

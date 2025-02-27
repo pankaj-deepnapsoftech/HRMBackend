@@ -132,4 +132,4 @@ const getAllProject = async (req, res) => {
   );
 };
 
-export { projectDetails, getAllProject, deleteProject };
+export { projectDetails, getAllProject, deleteProject ,updateProject};
