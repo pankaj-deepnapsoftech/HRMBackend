@@ -4,6 +4,41 @@ import ApiResponse from "../utlis/ApiResponse.js";
 import moment from "moment";
 import axios from "axios";
 import bcrypt from "bcrypt";
+import cron from "node-cron";
+
+// cron jobs
+// 🕙 Cron job to mark employees as Absent at 10 AM daily
+cron.schedule("* * * * *", async () => {
+  try {
+    const today = moment().format("YYYY-MM-DD");
+
+    // Get all employees from the database
+    const employees = await Employee.find();
+
+    for (const employee of employees) {
+      // Check if today's attendance is already recorded
+      let attendanceRecord = employee.attendance.find(
+        (att) => att.date === today
+      );
+
+      if (!attendanceRecord) {
+        // Mark as "Absent" if no attendance record exists
+        employee.attendance.push({
+          date: today,
+          status: "Absent",
+          loginTime: null,
+        });
+
+        await employee.save();
+        console.log(`Marked ${employee.email} as Absent for ${today}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error running attendance cron job:", error);
+  }
+});
+
+console.log("Cron job for auto-attendance marking is running...");
 
 // Generate access token function
 const generateAccessToken = async (userId) => {

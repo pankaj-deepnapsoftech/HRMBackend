@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // React frontend URL
+    origin: "http://localhost:5173", // React frontend URL  https://hr.deepmart.shop
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type"],
     credentials: true, // Allow sending cookies with requests
