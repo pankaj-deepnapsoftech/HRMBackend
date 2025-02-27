@@ -8,7 +8,7 @@ import cron from "node-cron";
 
 // cron jobs
 // 🕙 Cron job to mark employees as Absent at 10 AM daily
-cron.schedule("* * * * *", async () => {
+cron.schedule("* 9 * * *", async () => {
   try {
     const today = moment().format("YYYY-MM-DD");
 

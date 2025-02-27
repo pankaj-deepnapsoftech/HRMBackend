@@ -68,6 +68,46 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params; // Get project ID from request params
+    const updatedData = req.body; // Get updated data from request body
+
+    // Ensure selectMember is an array of ObjectIds if it's included in the update
+    if (updatedData.selectMember && !Array.isArray(updatedData.selectMember)) {
+      return res.status(400).json({
+        success: false,
+        message: "selectMember should be an array of ObjectIds",
+      });
+    }
+
+    // Find and update the project
+    const updatedProject = await Project.findByIdAndUpdate(id, updatedData, {
+      new: true, // Return the updated document
+      runValidators: true, // Ensure validation rules are applied
+    });
+
+    if (!updatedProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Project updated successfully",
+      data: updatedProject,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update project",
+      error: error.message,
+    });
+  }
+};
+
 // count total  project
 const getAllProject = async (req, res) => {
   const projectDetails = await Project.find();
